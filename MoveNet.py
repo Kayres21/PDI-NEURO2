@@ -1,7 +1,5 @@
-import tensorflow as tf
-import numpy as np
-from matplotlib import pyplot as plt
-import cv2
+
+from funciones import *
 
 def draw_keypoints(frame, keypoints, confidence_threshold):
     y, x, c = frame.shape
@@ -26,7 +24,7 @@ def draw_connections(frame, keypoints, edges, confidence_threshold):
 
 
 def main():
-    interpreter = tf.lite.Interpreter(model_path='lite-model_movenet_singlepose_lightning_3.tflite')
+    interpreter = tf.lite.Interpreter(model_path='lite-model_movenet_singlepose_thunder_3.tflite')
     interpreter.allocate_tensors()
 
     EDGES = {
@@ -49,15 +47,16 @@ def main():
     (12, 14): 'c',
     (14, 16): 'c'
 }
+    
 
-    cap = cv2.VideoCapture("Prueba_experimental_A.m4v")
+    cap = cv2.VideoCapture("Prueba_experimental_B.mp4")
     while cap.isOpened(): 
         ret, frame = cap.read()
 
         # Reshape image
         img = frame.copy()
-        img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), 192,192)
-        input_image = tf.cast(img, dtype=tf.float32)
+        input_image = tf.expand_dims(img, axis=0)
+        input_image = tf.image.resize_with_pad(input_image, 256, 256)
 
         # Setup input and output
         input_details = interpreter.get_input_details()
@@ -68,15 +67,15 @@ def main():
         interpreter.invoke() #Hace la prediccion de moviemiento
         keypoints_with_scores = interpreter.get_tensor(output_details[0]['index'])
         
-        draw_connections(frame, keypoints_with_scores, EDGES, 0.2)
-        draw_keypoints(frame, keypoints_with_scores, 0.2)
-
+        display_image = tf.expand_dims(img, axis=0)
+        display_image = tf.cast(tf.image.resize_with_pad(
+            display_image, 300, 300), dtype=tf.int32)
+        output_overlay = draw_prediction_on_image(
+            np.squeeze(display_image.numpy(), axis=0), keypoints_with_scores)
 
         
-        cv2.imshow("Prueba", frame)
-
-
-
+        cv2.imshow("Prueba", output_overlay)
+        
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
     
