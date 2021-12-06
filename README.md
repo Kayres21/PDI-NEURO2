@@ -1,2 +1,2 @@
-pip install numpy matplotlib mediapipe
+pip install numpy matplotlib mediapipe opencv-python
 
