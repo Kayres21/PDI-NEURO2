@@ -1,6 +1,7 @@
 from bibliotecas import *
 from make_video import make_video
 from media_pipe import pose_detector
+from localizador_pie import localizador
 
 
 def main():
@@ -25,6 +26,14 @@ def main():
             resultados, imagen =  pose_detector(mp_drawing,mp_drawing_styles ,mp_pose,pose ,frame)
             cv2.imshow("Imagen", imagen)
             
+            baricentro_derecho, baricentro_izquierdo = localizador(resultados, width, height, mp_pose)
+            
+            
+
+            print("---------------------------")
+            print(f" pos x {baricentro_derecho[0]} y: {baricentro_derecho[1]}")
+            print(f"El 1% del ancho es {width/100} y el 1% del alto de {height/100}")
+            print("---------------------------")
 
             img_array.append(imagen)
             if cv2.waitKey(1) & 0xFF == 27:
@@ -42,3 +51,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+    
