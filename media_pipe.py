@@ -6,7 +6,7 @@ def pose_detector(mp_drawing, mp_drawing_styles,mp_pose, pose,frame_original):
     frame = frame_original
     height, width, _ = frame.shape
     frame.flags.writeable = False
-    frame = cv2.flip(frame,1)
+    # frame = cv2.flip(frame,1)
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 ##Se procesa la imagen con el modelo entregando las landmarks
