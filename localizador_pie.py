@@ -1,7 +1,7 @@
 from bibliotecas import *
 
 
-def localizador(pose_landmark, width, height):
+def localizador(pose_landmark, width, height,mp_pose):
 
     pos_x_dedo_pie_izquierdo = pose_landmark.landmark[mp_pose.PoseLandmark.LEFT_FOOT_INDEX].x*width
     pos_y_dedo_pie_izquierdo = pose_landmark.landmark[mp_pose.PoseLandmark.LEFT_FOOT_INDEX].y*height
