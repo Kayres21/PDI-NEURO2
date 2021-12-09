@@ -3,6 +3,7 @@ from make_video import make_video
 from media_pipe import pose_detector
 from localizador_pie import localizador
 from detector_pisadas import detector_pisadas
+from roi import gen_roi, pisadas_roi
 
 
 def main():
@@ -19,6 +20,10 @@ def main():
     izquierdo = [0, 0] # posicion actual del pie izquierdo
     tol_x = 8 # toleracia para detectar pisada en eje x
     tol_y = 5 # toleracia para detectar pisada en eje y
+
+    src, contours, points = gen_roi(mask.shape[0], mask.shape[1])
+    cv2.imshow("ROI", src)
+
     with mp_pose.Pose(static_image_mode=
         False) as pose:
 
@@ -36,6 +41,9 @@ def main():
             
             # MÓDULO DETECTOR DE PISADAS
             imagen, pisada_x, pisada_y = detector_pisadas(imagen, [baricentro_derecho, baricentro_izquierdo], [tol_x, tol_y], [derecho, izquierdo])
+
+            # MÓDULO DETECTOR DE PISADAS EN ZONAS DE INTERÉS
+            imagen = pisadas_roi(imagen, pisada_x, pisada_y, contours, baricentro_derecho, baricentro_izquierdo, points)
 
             cv2.imshow("Imagen", imagen)
             derecho = baricentro_derecho

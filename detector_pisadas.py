@@ -24,7 +24,7 @@ def detector_pisadas(imagen, baricentros, tols, state):
         cv2.circle(imagen, (int(baricentro_derecho[0]), int(baricentro_derecho[1])), 10, (255,0,0), 2)
         pisada_x = True
     if (np.absolute(baricentro_izquierdo[0] - izquierdo[0]) <= tol_x) and (np.absolute(baricentro_izquierdo[1] - izquierdo[1]) <= tol_y):
-        # Se detecta una pisada en el pie derecho
+        # Se detecta una pisada en el pie izquierdo
         cv2.circle(imagen, (int(baricentro_izquierdo[0]), int(baricentro_izquierdo[1])), 10, (0,255,0), 2)
         pisada_y = True
     return imagen, pisada_x, pisada_y
