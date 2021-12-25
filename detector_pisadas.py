@@ -1,6 +1,6 @@
 from bibliotecas import *
 
-def detector_pisadas(imagen, baricentros, tols, state):
+def detector_pisadas( baricentros, tols, state):
     '''
         imagen: frame a ingresar
         baricentros: lista de baricentros
@@ -21,10 +21,29 @@ def detector_pisadas(imagen, baricentros, tols, state):
     # Pisadas del pie derecho (eje x)
     if (np.absolute(baricentro_derecho[0] - derecho[0]) <= tol_x) and (np.absolute(baricentro_derecho[1] - derecho[1]) <= tol_y):
         # Se detecta una pisada en el pie derecho
-        cv2.circle(imagen, (int(baricentro_derecho[0]), int(baricentro_derecho[1])), 10, (255,0,0), 2)
         pisada_x = True
     if (np.absolute(baricentro_izquierdo[0] - izquierdo[0]) <= tol_x) and (np.absolute(baricentro_izquierdo[1] - izquierdo[1]) <= tol_y):
         # Se detecta una pisada en el pie izquierdo
-        cv2.circle(imagen, (int(baricentro_izquierdo[0]), int(baricentro_izquierdo[1])), 10, (0,255,0), 2)
         pisada_y = True
-    return imagen, pisada_x, pisada_y
+    return  pisada_x, pisada_y
+
+
+def dibujar_pisadas(baricentros , tols,state,imagen):
+    baricentro_derecho = baricentros[0]
+    baricentro_izquierdo = baricentros[1]
+    tol_x = tols[0]
+    tol_y = tols[1]
+    derecho = state[0]
+    izquierdo = state[1]
+    frame_pintado= imagen
+    
+    
+    if (np.absolute(baricentro_derecho[0] - derecho[0]) <= tol_x) and (np.absolute(baricentro_derecho[1] - derecho[1]) <= tol_y):
+        # Se detecta una pisada en el pie derecho
+        cv2.circle(frame_pintado, (int(baricentro_derecho[0]), int(baricentro_derecho[1])), 10, (255,0,0), 2)
+        
+    if (np.absolute(baricentro_izquierdo[0] - izquierdo[0]) <= tol_x) and (np.absolute(baricentro_izquierdo[1] - izquierdo[1]) <= tol_y):
+        # Se detecta una pisada en el pie izquierdo
+        cv2.circle(frame_pintado, (int(baricentro_izquierdo[0]), int(baricentro_izquierdo[1])), 10, (0,0,255), 2)
+    
+    return frame_pintado
