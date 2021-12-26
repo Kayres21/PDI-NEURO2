@@ -30,6 +30,7 @@ def mouse_callback(event, x, y, flags, params):
 
 def main():
     mode = 1 # 0 para prueba A, 1 para prueba B
+    tiempo_total=0
     if mode:
         archivo = "Prueba_experimental_B.mp4"
         nombre_archivo = "Prueba_experimental_B"
@@ -139,15 +140,23 @@ def main():
         else:
             count = 1
         temp = lista_sin_cuatro[i]
-    
+    #Comprobación de aciertos
+    seq_correcta=[8,5,6,2,3,7,1,2,5]
+    contador_aciertos=0
+    for i in range(len(seq_correcta)):
+        if(res[i]==seq_correcta[i]):
+            contador_aciertos+=1
+
     print("Secuencia del jugador: ", res)
     final = time.time()
     print("tiempo antes del procesado",preprocesado_time-inicio)
+    tiempo_total=final-inicio
+    make_pdf(tiempo_total, [contador_aciertos,len(res)], nombre_archivo)
     print("Tiempo total",final-inicio)
     make_video(width,height, img_array,archivo )
 
 
 if __name__ == "__main__":
     main()
-    #make_pdf(40, [10,15], "Prueba_experimental_B")
+    #make_pdf(tiempo_total, [10,15], "Prueba_experimental_B")
     

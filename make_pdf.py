@@ -14,7 +14,7 @@ def make_pdf(tiempo, aciertos, nombre_archivo):
     pdf.cell(200,10 , 'Resultados', ln=1,align='C')
     
     pdf.set_font('Arial', size= 12)
-    pdf.cell(200,10 , 'Tiempo de procesamiento: ' + str(tiempo) + '[s]', ln=2,align='C')
+    pdf.cell(200,10 , 'Tiempo de procesamiento: ' + str(round(tiempo)) + '[s]', ln=2,align='C')
     pdf.ln(10)
     pdf.cell(200,10 , 'Pisadas acertadas: ' + str(acierto),ln=3,  align='C')
     pdf.ln(10)
