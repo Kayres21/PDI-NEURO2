@@ -149,9 +149,9 @@ def main():
     make_pdf(tiempo_total, [contador_aciertos, len(res)], nombre_archivo)
     make_video(width, height, img_array, archivo)
 
-    print(f"Secuencia del jugador:      {res}")
-    print(f"tiempo antes del procesado: {preprocesado_time-inicio}")
-    print(f"Tiempo total:               {final-inicio}")
+    # print(f"Secuencia del jugador:      {res}")
+    # print(f"tiempo antes del procesado: {preprocesado_time-inicio}")
+    # print(f"Tiempo total:               {final-inicio}")
 
 
 
@@ -199,5 +199,5 @@ if __name__ == "__main__":
 
     else:
         main()
-        #make_pdf(tiempo_total, [10,15], "Prueba_experimental_B")
+        
     
