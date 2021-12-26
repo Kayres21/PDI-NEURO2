@@ -22,14 +22,15 @@ class Window(QMainWindow):
 
         # Create a label for the display camera
         self.labelDisplayVideo = QLabel(self)
-        self.labelDisplayVideo.setText("Video")
+        # self.labelDisplayVideo.setText("Video")
         self.labelDisplayVideo.setFixedSize(640, 480)
 
-
+        # Descomentar esto para incluir el ROI
+        '''
         self.labelDisplayROI = QLabel(self)
         self.labelDisplayROI.setText("ROI")
         self.labelDisplayROI.setFixedSize(640, 480)
-
+        '''
 
         # Thread in charge of updating the image
         self.th = Thread(self)
@@ -37,7 +38,8 @@ class Window(QMainWindow):
         #self.th.updateVideoFrame.connect(self.setImage)
 
         self.th.updateVideoFrame.connect(self.setVideoImage)
-        self.th.updateROIFrame.connect(self.setROIImage)
+        # Descomentar esto para incluir el ROI
+        # self.th.updateROIFrame.connect(self.setROIImage) 
 
 
         # Listing all the sample videos into availableVideos
@@ -77,7 +79,8 @@ class Window(QMainWindow):
 
         # Video and ROI layout
         video_roi_layout = QHBoxLayout()
-        video_roi_layout.addWidget(self.labelDisplayROI)
+        # Descomentar esto para incluir el ROI
+        # video_roi_layout.addWidget(self.labelDisplayROI)
         video_roi_layout.addWidget(self.labelDisplayVideo)
 
 
@@ -135,7 +138,10 @@ class Window(QMainWindow):
     @Slot(QImage)
     def setVideoImage(self, image):
         self.labelDisplayVideo.setPixmap(QPixmap.fromImage(image))
-
+    # Descomentar esto para incluir el ROI
+    '''
     @Slot(QImage)
     def setROIImage(self, image):
         self.labelDisplayROI.setPixmap(QPixmap.fromImage(image))
+    '''
+
