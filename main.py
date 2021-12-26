@@ -23,7 +23,7 @@ def mouse_callback(event, x, y, flags, params):
         count += 1 
         if (count % 4 == 0):
             ROI_B.append([x, y])
-            f = open('TEST.txt', 'a').write(str(ROI_B) + '\n')
+            f = open('TEST.txt', 'a').write(str(ROI_B) + '\n') # Cambiar aquí para calibrar los ROI
             ROI_B = []
             f.close()
         else:
@@ -35,12 +35,12 @@ def main():
     tiempo_total=0
     if mode:
         archivo = "samples/Prueba_experimental_B.mp4"
+        roi = "samples/ROI_B.txt"
+        nombre_archivo = "Prueba_experimental_B"
     else:
         archivo = "samples/Prueba_experimental_A.m4v"
-
-    nombre_archivo = Path(archivo).stem
-    roi = f"ROI_{nombre_archivo[-1]}.txt"
-
+        roi = "samples/ROI_A.txt"
+        nombre_archivo = "Prueba_experimental_A"
 
     inicio = time.time()
     cap = cv2.VideoCapture(archivo)
@@ -56,15 +56,9 @@ def main():
     tol_x = 8 # toleracia para detectar pisada en eje x
     tol_y = 5 # toleracia para detectar pisada en eje y
     seq = [] #arreglo que contiene la secuencia de balizas del jugador
-    #SECUENCIA_JUGADOR=[]
-    #FUNCION_MARCA_SECUENCIA(posicion_id){
-    # PASO PREVIO: GUARDE EL posicion_id DE LA POSICIÓN ANTERIOR
-    # 1: REVISE SI HAY UN posicion_id=4 (EL JUGADOR ESTÁ EN LA POSICIÓN BASE
-    # 2: GUARDAR EL posicion_id EN EL PASO PREVIO
-    # 3: EN CASO QUE EL posicion_id !=4 Y EL PASO PREVIO SEA 4: GUARDAR EL posicion_id EN EL PASO PREVIO
-    # 4: EN CASO QUE EL posicion_id = 4 Y EL PASO PREVIO SEA != 4: GUARDAR EL posicion_id EN SECUENCIA_JUGADOR)}
+
     '''
-    ----- GENERAR LAS REGIONES DE INTERÉS (ACTUALMENTE Prueba_experimental_B.mp4) -----
+    ----- GENERAR LAS REGIONES DE INTERÉS -----
     '''
     ret, frame = cap.read()
     src, points_and_contours = gen_roi(frame.shape[0], frame.shape[1], roi) # se usa el frame obtenido en (2) para no iterar en el While
@@ -107,9 +101,9 @@ def main():
             
             cv2.imshow("Imagen", imagen)
             '''
-            ----- (1) GENERAR ROI MANUALMENTE (se usó para generar ROI_B.txt) -----
+            ----- GENERAR ROI MANUALMENTE -----
             '''
-            ##cv2.setMouseCallback("Imagen", mouse_callback)
+            # cv2.setMouseCallback("Imagen", mouse_callback)
             derecho = baricentro_derecho
             izquierdo = baricentro_izquierdo
             
@@ -123,9 +117,9 @@ def main():
             
         cap.release()
         cv2.destroyAllWindows()
-    # ACÁAAAAA, ARMAR LA SECUENCIA DEL JUGADOR
-    #1: quitemos los 4
-    preprocesado_time=time.time()
+    
+    # Armar la secuencia del jugador
+    preprocesado_time = time.time()
     lista_sin_cuatro = list(filter((4).__ne__, seq))
     count = 1
     temp = -1
@@ -142,15 +136,15 @@ def main():
         else:
             count = 1
         temp = lista_sin_cuatro[i]
-    #Comprobación de aciertos
-    seq_correcta=[8,5,6,2,3,7,1,2,5]
-    contador_aciertos=0
+    #Comprobacion de aciertos
+    seq_correcta = [8, 5, 6, 2, 3, 7, 1, 2, 5]
+    contador_aciertos = 0
     for i in range(len(seq_correcta)):
-        if(res[i]==seq_correcta[i]):
-            contador_aciertos+=1
+        if(res[i] == seq_correcta[i]):
+            contador_aciertos += 1
 
     final = time.time()
-    tiempo_total=final-inicio
+    tiempo_total = final - inicio
 
     make_pdf(tiempo_total, [contador_aciertos, len(res)], nombre_archivo)
     make_video(width, height, img_array, archivo)
@@ -186,16 +180,16 @@ if __name__ == "__main__":
     subdirs = {a for a in Path(".").iterdir()}
 
     if Path("samples") not in subdirs:
-        print("No existe directorio resutls, abortando")
+        print("No existe directorio samples, abortando")
         exit()
 
 
     if Path("results") not in subdirs:
-        print("No existe directorio resutls, abortando")
+        print("No existe directorio results, abortando")
         exit()
 
 
-    GUI = True
+    GUI = False
 
     if (GUI):
         app = QApplication()
