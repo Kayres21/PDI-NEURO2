@@ -1,8 +1,11 @@
+from os import times
 from bibliotecas import *
 from make_video import make_video
-from media_pipe import pose_detector
+from media_pipe import pose_detector, dibujar_esqueleto
 from localizador_pie import localizador
-from detector_pisadas import detector_pisadas
+from detector_pisadas import detector_pisadas, dibujar_pisadas
+
+import time
 from roi import gen_roi, pisadas_roi
 
 '''
@@ -32,6 +35,7 @@ def main():
     else:
         archivo = "Prueba_experimental_A.m4v"
         roi = "ROI_A.txt"
+    inicio = time.time()
     cap = cv2.VideoCapture(archivo)
     mp_drawing = mp.solutions.drawing_utils
     mp_drawing_styles = mp.solutions.drawing_styles
@@ -62,27 +66,35 @@ def main():
                 break
 
             height, width, _ = frame.shape
-            resultados, imagen =  pose_detector(mp_drawing,mp_drawing_styles ,mp_pose,pose ,frame)
+            resultados =  pose_detector(pose ,frame)
             # cv2.imshow("Imagen", imagen)
             
-            baricentro_derecho, baricentro_izquierdo = localizador(resultados, width, height, mp_pose)
+            baricentro_derecho, baricentro_izquierdo = localizador(resultados.pose_landmarks, width, height, mp_pose)
             
             '''
             ----- MÓDULO DETECTOR DE PISADAS -----
             '''
-            imagen, pisada_x, pisada_y = detector_pisadas(imagen, [baricentro_derecho, baricentro_izquierdo], [tol_x, tol_y], [derecho, izquierdo])
+            pisada_x, pisada_y = detector_pisadas([baricentro_derecho, baricentro_izquierdo], [tol_x, tol_y], [derecho, izquierdo])
 
             '''
             ----- MÓDULO DETECTOR DE PISADAS EN ZONAS DE INTERÉS -----
             '''
-            imagen = pisadas_roi(imagen, pisada_x, pisada_y, baricentro_derecho, baricentro_izquierdo, points_and_contours)
+            imagen = pisadas_roi(frame, pisada_x, pisada_y, baricentro_derecho, baricentro_izquierdo, points_and_contours)
+            '''
+            ----- MÓDULO DE PINTADO DE PISADAS -----
+            '''
+            imagen = dibujar_pisadas( [baricentro_derecho, baricentro_izquierdo], [tol_x, tol_y], [derecho, izquierdo],imagen)
+            '''
+            ----- MÓDULO DE PINTADO DE ESQUELETO -----
+            '''
+            imagen = dibujar_esqueleto(mp_drawing,mp_drawing_styles ,mp_pose, resultados, imagen)
             
-
+            
             cv2.imshow("Imagen", imagen)
             '''
             ----- (1) GENERAR ROI MANUALMENTE (se usó para generar ROI_B.txt) -----
             '''
-            cv2.setMouseCallback("Imagen", mouse_callback)
+            ##cv2.setMouseCallback("Imagen", mouse_callback)
 
             derecho = baricentro_derecho
             izquierdo = baricentro_izquierdo
@@ -102,7 +114,8 @@ def main():
         make_video(width,height, img_array,archivo )
         cap.release()
         cv2.destroyAllWindows()
-    
+    final = time.time()
+    print(final-inicio)
 
 
 
