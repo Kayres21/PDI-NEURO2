@@ -1,5 +1,5 @@
 from fpdf import FPDF 
-
+import os
 
 def make_pdf(tiempo, aciertos, nombre_archivo):
     
@@ -21,9 +21,6 @@ def make_pdf(tiempo, aciertos, nombre_archivo):
     pdf.cell(200,10 , 'Pisadas totales: ' + str(total) ,ln=4, align='C')
     pdf.ln(10)
     pdf.cell(200,10, 'Porcentaje acierto: ' + str(porcentaje_error) +'%', ln=5, align='C')
-    
-    
-    
-    
-    pdf.output('resultados_' + nombre_archivo +'.pdf', 'F')
-    
+
+    filename = os.path.join("results", f'resultados_{nombre_archivo}.pdf')
+    pdf.output(filename, 'F')

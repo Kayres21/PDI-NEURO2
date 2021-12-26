@@ -21,32 +21,43 @@ class Window(QMainWindow):
 
 
         # Create a label for the display camera
-        self.labelDisplayCamera = QLabel(self)
-        self.labelDisplayCamera.setFixedSize(640, 480)
+        self.labelDisplayVideo = QLabel(self)
+        self.labelDisplayVideo.setText("Video")
+        self.labelDisplayVideo.setFixedSize(640, 480)
+
+
+        self.labelDisplayROI = QLabel(self)
+        self.labelDisplayROI.setText("ROI")
+        self.labelDisplayROI.setFixedSize(640, 480)
 
 
         # Thread in charge of updating the image
         self.th = Thread(self)
         self.th.finished.connect(self.close)
-        self.th.updateFrame.connect(self.setImage)
+        #self.th.updateVideoFrame.connect(self.setImage)
 
-        # Model group
-        self.group_model = QGroupBox("Selecciona el video")
-        self.group_model.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        model_layout = QHBoxLayout()
+        self.th.updateVideoFrame.connect(self.setVideoImage)
+        self.th.updateROIFrame.connect(self.setROIImage)
 
-        self.combobox = QComboBox()
 
-        model_layout.addWidget(QLabel("Archivo:"), 20)
-        model_layout.addWidget(self.combobox, 80)
-        self.group_model.setLayout(model_layout)
-
-        # Listing different models into model group
-
+        # Listing all the sample videos into availableVideos
+        self.availableVideos = QComboBox()
         sampleDirectory = os.path.join(os.getcwd(), "samples")
         for fname in os.listdir(sampleDirectory):
             if fname.endswith(".mp4") or fname.endswith(".m4v"):
-                self.combobox.addItem(fname)
+                self.availableVideos.addItem(fname)
+
+        # Model group
+        model_layout = QHBoxLayout()
+        model_layout.addWidget(QLabel("Archivo:"), 20)
+        model_layout.addWidget(self.availableVideos, 80)
+
+
+        self.group_model = QGroupBox("Selecciona el video")
+        self.group_model.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.group_model.setLayout(model_layout)
+
+
         
         # Buttons layout
         buttons_layout = QHBoxLayout()
@@ -63,9 +74,16 @@ class Window(QMainWindow):
         right_layout.addWidget(self.group_model, 1)
         right_layout.addLayout(buttons_layout, 1)
 
+
+        # Video and ROI layout
+        video_roi_layout = QHBoxLayout()
+        video_roi_layout.addWidget(self.labelDisplayROI)
+        video_roi_layout.addWidget(self.labelDisplayVideo)
+
+
         # Main layout
         layout = QVBoxLayout()
-        layout.addWidget(self.labelDisplayCamera)
+        layout.addLayout(video_roi_layout)
         layout.addLayout(right_layout)
 
         # Central widget
@@ -77,7 +95,7 @@ class Window(QMainWindow):
         self.buttonStart.clicked.connect(self.start)
         self.buttonStop.clicked.connect(self.kill_thread)
         self.buttonStop.setEnabled(False)
-        self.combobox.currentTextChanged.connect(self.set_file)
+        self.availableVideos.currentTextChanged.connect(self.set_file)
 
     @Slot()
     def set_file(self, text):
@@ -88,7 +106,8 @@ class Window(QMainWindow):
         print("Finishing...")
         self.buttonStop.setEnabled(False)
         self.buttonStart.setEnabled(True)
-        self.th.cap.release()
+        self.th.cap_roi.release()
+        self.th.cap_video.release()
         cv2.destroyAllWindows()
         self.status = False
         self.th.terminate()
@@ -100,13 +119,23 @@ class Window(QMainWindow):
         print("Starting...")
         self.buttonStop.setEnabled(True)
         self.buttonStart.setEnabled(False)
-        self.th.set_file(self.combobox.currentText())
+        self.th.set_file(self.availableVideos.currentText())
 
         time.sleep(1)
-        print("Archivo de entrenamiento: " + self.th.archivo)
+        print(f"{self.th.archivo        = }")
+        print(f"{self.th.nombre_archivo = }")
+        print(f"{self.th.roi            = }")
 
         self.th.start()
 
     @Slot(QImage)
     def setImage(self, image):
-        self.labelDisplayCamera.setPixmap(QPixmap.fromImage(image))
+        self.labelDisplayVideo.setPixmap(QPixmap.fromImage(image))
+
+    @Slot(QImage)
+    def setVideoImage(self, image):
+        self.labelDisplayVideo.setPixmap(QPixmap.fromImage(image))
+
+    @Slot(QImage)
+    def setROIImage(self, image):
+        self.labelDisplayROI.setPixmap(QPixmap.fromImage(image))

@@ -8,95 +8,188 @@ from PySide6.QtGui import QImage
 
 from bibliotecas import *
 from make_video import make_video
-from media_pipe import pose_detector
+from media_pipe import pose_detector, dibujar_esqueleto
+from localizador_pie import localizador
+from detector_pisadas import detector_pisadas, dibujar_pisadas
+from make_pdf import make_pdf
+
+import time
+from roi import gen_roi, pisadas_roi
 
 
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-mp_pose = mp.solutions.pose
+from pathlib import Path
+
+
 
 
 
 class Thread(QThread):
-    updateFrame = Signal(QImage)
+    updateVideoFrame = Signal(QImage)
+    updateROIFrame = Signal(QImage)
 
 
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
-        self.archivo = None
         self.status = True
-        self.cap = True
-        self.img_array = []
-        self.height = None
-        self.width = None
+        self.cap_video = True
+        self.cap_roi = True
+        self.archivo = None
+        self.nombre_archivo = None
+        self.roi = None
 
     def set_file(self, fname):
 
-        sample_directory = os.path.join(os.getcwd(), "samples")
-        sample_file  = os.path.join(sample_directory, fname)
-
-        sample_file  = os.path.join("samples", fname)
-        self.archivo = sample_file
+        self.archivo =        os.path.join("samples", fname)
+        self.nombre_archivo = Path(fname).stem
+        self.roi =            os.path.join("samples", f"ROI_{self.nombre_archivo[-1]}.txt")
 
 
 
     def run(self):
+        tiempo_total = 0
+
         archivo = self.archivo
-        self.cap = cv2.VideoCapture(archivo)
+        nombre_archivo = self.nombre_archivo
+        roi = self.roi
+        img_array = []
+
+        inicio = time.time()
+
+        self.cap_video = cv2.VideoCapture(archivo)
+        self.cap_roi = cv2.VideoCapture(roi)
+
+
+        mp_drawing = mp.solutions.drawing_utils
+        mp_drawing_styles = mp.solutions.drawing_styles
+        mp_pose = mp.solutions.pose
+
+        '''
+        ----- PARÁMETROS PARA EL MÓDULO DETECTOR DE PISADAS -----
+        '''
+        derecho = [0, 0] # posicion actual del pie derecho
+        izquierdo = [0, 0] # posicion actual del pie izquierdo
+        tol_x = 8 # toleracia para detectar pisada en eje x
+        tol_y = 5 # toleracia para detectar pisada en eje y
+        seq = [] #arreglo que contiene la secuencia de balizas del jugador
+        
+        '''
+        ----- GENERAR LAS REGIONES DE INTERÉS (ACTUALMENTE Prueba_experimental_B.mp4) -----
+        '''
+        ret, opencv_frame = self.cap_video.read()
+        src, points_and_contours = gen_roi(opencv_frame.shape[0], opencv_frame.shape[1], self.roi) 
+        #cv2.imshow("ROI", src)
+        
+        #  # mostrar las regiones de interés obtenidas manualmente
+        qt_frame = opencv_to_qt(src)
+        final_frame = qt_frame.scaled(640, 480, Qt.KeepAspectRatio)
+        self.updateROIFrame.emit(final_frame)
+        
         
         with mp_pose.Pose(static_image_mode=False) as pose:
 
             while self.status:
-                ret, opencv_frame = self.cap.read()
+
+                '''
+                ----- PROCESAR VIDEO NEUROENTRENAMIENTO -----
+                '''
+                ret, opencv_frame = self.cap_video.read()
                 if not ret:
-                    continue
+                    break
 
-                opencv_frame = self.processOpencvFrame(opencv_frame, pose)
 
-                qt_frame = opencv_to_qt(opencv_frame)
+                height, width, _ = opencv_frame.shape
 
+
+                ############
+                # img_array.append(opencv_frame)
+
+                # qt_frame = opencv_to_qt(opencv_frame)
+                # final_frame = qt_frame.scaled(640, 480, Qt.KeepAspectRatio)
+                # self.updateVideoFrame.emit(final_frame)
+
+                # continue
+                ############
+
+
+
+                resultados = pose_detector(pose, opencv_frame)
+
+                baricentro_derecho, baricentro_izquierdo = localizador(resultados.pose_landmarks, width, height, mp_pose)
+
+                '''
+                ----- MÓDULO DETECTOR DE PISADAS -----
+                '''
+                pisada_x, pisada_y = detector_pisadas([baricentro_derecho, baricentro_izquierdo], [tol_x, tol_y], [derecho, izquierdo])
+
+                '''
+                ----- MÓDULO DETECTOR DE PISADAS EN ZONAS DE INTERÉS -----
+                '''
+                imagen, index = pisadas_roi(opencv_frame, pisada_x, pisada_y, baricentro_derecho, baricentro_izquierdo, points_and_contours)
+                if index > -1:
+                    seq.append(index)
+                '''
+                ----- MÓDULO DE PINTADO DE PISADAS -----
+                '''
+                imagen = dibujar_pisadas( [baricentro_derecho, baricentro_izquierdo], [tol_x, tol_y], [derecho, izquierdo],imagen)
+                '''
+                ----- MÓDULO DE PINTADO DE ESQUELETO -----
+                '''
+                imagen = dibujar_esqueleto(mp_drawing,mp_drawing_styles ,mp_pose, resultados, imagen)
+
+
+                img_array.append(imagen)
+
+                qt_frame = opencv_to_qt(imagen)
                 final_frame = qt_frame.scaled(640, 480, Qt.KeepAspectRatio)
-                self.updateFrame.emit(final_frame)
+                self.updateVideoFrame.emit(final_frame)
 
-            self.cap.release()
-            cv2.destroyAllWindows()
-
-
-        sys.exit(-1)
+                derecho = baricentro_derecho
+                izquierdo = baricentro_izquierdo
 
 
+        ############
+        #make_video(width, height, img_array, nombre_archivo)
+        #return
+        ############
 
-    # Procesa el video dentro del dominio de OpenCV.
-    def processOpencvFrame(self, opencv_frame, pose):
+        # ACÁAAAAA, ARMAR LA SECUENCIA DEL JUGADOR
 
-        self.height, self.width, _ = opencv_frame.shape
+        #1: quitemos los 4
+        preprocesado_time=time.time()
+        lista_sin_cuatro = list(filter((4).__ne__, seq))
+        count = 1
+        temp = -1
+        res = []
+        for i in range(len(lista_sin_cuatro)):
+            if(temp == lista_sin_cuatro[i]):
+                count += 1
+                if(count >= 10):
+                    if(len(res) == 0):
+                        res.append(lista_sin_cuatro[i])
+                    else:
+                        if(res[-1] != lista_sin_cuatro[i]):
+                            res.append(lista_sin_cuatro[i])                    
+            else:
+                count = 1
+            temp = lista_sin_cuatro[i]
 
-        resultados, imagen =  pose_detector(mp_drawing,mp_drawing_styles ,mp_pose,pose ,opencv_frame)
+        #Comprobación de aciertos
+        seq_correcta=[8,5,6,2,3,7,1,2,5]
+        contador_aciertos=0
 
-        self.img_array.append(imagen)
+        for i in range(len(seq_correcta)):
+            if(res[i]==seq_correcta[i]):
+                contador_aciertos+=1
 
-        return imagen
+        final = time.time()
+        tiempo_total=final-inicio
 
-        cascade = cv2.CascadeClassifier(self.archivo)
+        make_pdf(tiempo_total, [contador_aciertos, len(res)], nombre_archivo)
+        make_video(width, height, img_array, nombre_archivo)
 
-        detections = cascade.detectMultiScale(
-            cv2.cvtColor(opencv_frame, cv2.COLOR_BGR2GRAY), # Gray image
-            scaleFactor=1.1,
-            minNeighbors=5,
-            minSize=(30, 30)
-        )
-
-        # Drawing green rectangle around the pattern
-        for (x, y, w, h) in detections:
-            cv2.rectangle(
-                img=opencv_frame,
-                pt1=(x, y),
-                pt2=(x + w, y + h),
-                color=(0, 255, 0),
-                thickness=2
-            )   
-
-        return opencv_frame
+        print(f"Secuencia del jugador:      {res}")
+        print(f"tiempo antes del procesado: {preprocesado_time-inicio}")
+        print(f"Tiempo total:               {final-inicio}")
 
 
 

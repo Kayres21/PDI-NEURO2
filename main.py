@@ -1,4 +1,3 @@
-from os import times
 from bibliotecas import *
 from make_video import make_video
 from media_pipe import pose_detector, dibujar_esqueleto
@@ -8,6 +7,9 @@ from make_pdf import make_pdf
 
 import time
 from roi import gen_roi, pisadas_roi
+
+
+from pathlib import Path
 
 '''
 ----- DETECTOR DE EVENTOS PARA GENERAR MANUALMENTE EL ROI -----
@@ -33,12 +35,13 @@ def main():
     tiempo_total=0
     if mode:
         archivo = "samples/Prueba_experimental_B.mp4"
-        nombre_archivo = "Prueba_experimental_B"
-        roi = "ROI_B.txt"
     else:
         archivo = "samples/Prueba_experimental_A.m4v"
-        nombre_archivo = "Prueba_experimental_A"
-        roi = "ROI_A.txt"
+
+    nombre_archivo = Path(archivo).stem
+    roi = f"ROI_{nombre_archivo[-1]}.txt"
+
+
     inicio = time.time()
     cap = cv2.VideoCapture(archivo)
     mp_drawing = mp.solutions.drawing_utils
@@ -67,8 +70,7 @@ def main():
     src, points_and_contours = gen_roi(frame.shape[0], frame.shape[1], roi) # se usa el frame obtenido en (2) para no iterar en el While
     cv2.imshow("ROI", src) # mostrar las regiones de interés obtenidas manualmente
 
-    with mp_pose.Pose(static_image_mode=
-        False) as pose:
+    with mp_pose.Pose(static_image_mode=False) as pose:
 
         img_array = []
         while True:
@@ -147,16 +149,61 @@ def main():
         if(res[i]==seq_correcta[i]):
             contador_aciertos+=1
 
-    print("Secuencia del jugador: ", res)
     final = time.time()
-    print("tiempo antes del procesado",preprocesado_time-inicio)
     tiempo_total=final-inicio
-    make_pdf(tiempo_total, [contador_aciertos,len(res)], nombre_archivo)
-    print("Tiempo total",final-inicio)
-    make_video(width,height, img_array,archivo )
+
+    make_pdf(tiempo_total, [contador_aciertos, len(res)], nombre_archivo)
+    make_video(width, height, img_array, archivo)
+
+    print(f"Secuencia del jugador:      {res}")
+    print(f"tiempo antes del procesado: {preprocesado_time-inicio}")
+    print(f"Tiempo total:               {final-inicio}")
+
+
+
+
+
+
+
+
+
+import sys
+from PySide6.QtWidgets import QApplication
+
+
+"""This example uses the video from a  webcam to apply pattern
+detection from the OpenCV module. e.g.: face, eyes, body, etc."""
+
+
+from window import Window
+from pathlib import Path
 
 
 if __name__ == "__main__":
-    main()
-    #make_pdf(tiempo_total, [10,15], "Prueba_experimental_B")
+
+    # Es necesario que exista un directorio "samples" y "results"
+    # para que esto funcione.
+    subdirs = {a for a in Path(".").iterdir()}
+
+    if Path("samples") not in subdirs:
+        print("No existe directorio resutls, abortando")
+        exit()
+
+
+    if Path("results") not in subdirs:
+        print("No existe directorio resutls, abortando")
+        exit()
+
+
+    GUI = True
+
+    if (GUI):
+        app = QApplication()
+        w = Window()
+        w.show()
+        sys.exit(app.exec())
+
+    else:
+        main()
+        #make_pdf(tiempo_total, [10,15], "Prueba_experimental_B")
     
