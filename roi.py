@@ -1,13 +1,8 @@
 from bibliotecas import *
 import ast
-def gen_roi(h, w, mode = 1):
-    '''
-        mode = 0, ROI para Prueba Experimental A
-        mode = 1, ROI para Prueba Experimental B
-        (aún no se implementan las distinciones)
-    '''
+def gen_roi(h, w, filename):
     src = np.zeros((h, w), dtype = np.uint8)
-    lines = open('ROI_B.txt', 'r').readlines()
+    lines = open(filename, 'r').readlines()
     ROI = [ast.literal_eval(line[:-1]) for line in lines]
     points_and_contours = []
     for roi in ROI:

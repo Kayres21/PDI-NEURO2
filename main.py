@@ -14,10 +14,10 @@ ROI_B, count = [], 0
 def mouse_callback(event, x, y, flags, params):
     if event == 2:
         global ROI_B, count
-        count += 1
+        count += 1 
         if (count % 4 == 0):
             ROI_B.append([x, y])
-            f = open('ROI_B.txt', 'a').write(str(ROI_B) + '\n')
+            f = open('TEST.txt', 'a').write(str(ROI_B) + '\n')
             ROI_B = []
             f.close()
         else:
@@ -25,10 +25,13 @@ def mouse_callback(event, x, y, flags, params):
         print(ROI_B, count)
 
 def main():
-
-    archivo = "Prueba_experimental_B.mp4"
-    balizas = "mask.jpg" # (2)
-    mask = cv2.imread(balizas) # (2)
+    mode = 0 # 0 para prueba A, 1 para prueba B
+    if mode:
+        archivo = "Prueba_experimental_B.mp4"
+        roi = "ROI_B.txt"
+    else:
+        archivo = "Prueba_experimental_A.m4v"
+        roi = "ROI_A.txt"
     cap = cv2.VideoCapture(archivo)
     mp_drawing = mp.solutions.drawing_utils
     mp_drawing_styles = mp.solutions.drawing_styles
@@ -45,7 +48,8 @@ def main():
     '''
     ----- GENERAR LAS REGIONES DE INTERÉS (ACTUALMENTE Prueba_experimental_B.mp4) -----
     '''
-    src, points_and_contours = gen_roi(mask.shape[0], mask.shape[1]) # se usa el frame obtenido en (2) para no iterar en el While
+    ret, frame = cap.read()
+    src, points_and_contours = gen_roi(frame.shape[0], frame.shape[1], roi) # se usa el frame obtenido en (2) para no iterar en el While
     cv2.imshow("ROI", src) # mostrar las regiones de interés obtenidas manualmente
 
     with mp_pose.Pose(static_image_mode=
@@ -78,7 +82,7 @@ def main():
             '''
             ----- (1) GENERAR ROI MANUALMENTE (se usó para generar ROI_B.txt) -----
             '''
-            # cv2.setMouseCallback("Imagen", mouse_callback)
+            cv2.setMouseCallback("Imagen", mouse_callback)
 
             derecho = baricentro_derecho
             izquierdo = baricentro_izquierdo
@@ -89,21 +93,11 @@ def main():
 
             img_array.append(imagen)
 
-            '''
-            ----- (2) OBTENER UN FRAME DE INTERÉS PARA LA DETECCIÓN DE BALIZAS (ya no se usa, ahora se prueba con 1) -----
-            '''
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            mask = cv2.inRange(hsv, (160, 50, 50), (180, 255, 255))
-            # cv2.imshow("hsv", hsv)
-            # cv2.imshow("mask", mask)
-
             k = cv2.waitKey(1)
 
             if k & 0xFF == 27:
                 break
-            elif k & 0xFF == 32:
-                print("Exportando frame de interés")
-                cv2.imwrite("mask.jpg", mask)
+
 
         make_video(width,height, img_array,archivo )
         cap.release()
