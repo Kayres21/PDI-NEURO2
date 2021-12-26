@@ -4,6 +4,7 @@ from make_video import make_video
 from media_pipe import pose_detector, dibujar_esqueleto
 from localizador_pie import localizador
 from detector_pisadas import detector_pisadas, dibujar_pisadas
+from make_pdf import make_pdf
 
 import time
 from roi import gen_roi, pisadas_roi
@@ -31,9 +32,11 @@ def main():
     mode = 1 # 0 para prueba A, 1 para prueba B
     if mode:
         archivo = "Prueba_experimental_B.mp4"
+        nombre_archivo = "Prueba_experimental_B"
         roi = "ROI_B.txt"
     else:
         archivo = "Prueba_experimental_A.m4v"
+        nombre_archivo = "Prueba_experimental_A"
         roi = "ROI_A.txt"
     inicio = time.time()
     cap = cv2.VideoCapture(archivo)
@@ -74,7 +77,7 @@ def main():
 
             height, width, _ = frame.shape
             resultados =  pose_detector(pose ,frame)
-            # cv2.imshow("Imagen", imagen)
+            
             
             baricentro_derecho, baricentro_izquierdo = localizador(resultados.pose_landmarks, width, height, mp_pose)
             
@@ -104,23 +107,17 @@ def main():
             ----- (1) GENERAR ROI MANUALMENTE (se usó para generar ROI_B.txt) -----
             '''
             ##cv2.setMouseCallback("Imagen", mouse_callback)
-
             derecho = baricentro_derecho
             izquierdo = baricentro_izquierdo
-            # print("---------------------------")
-            # print(f" pos x {baricentro_derecho[0]} y: {baricentro_derecho[1]}")
-            # print(f"El 1% del ancho es {width/100} y el 1% del alto de {height/100}")
-            # print("---------------------------")
-
+            
             img_array.append(imagen)
 
             k = cv2.waitKey(1)
+            
 
             if k & 0xFF == 27:
                 break
-
-
-        make_video(width,height, img_array,archivo )
+            
         cap.release()
         cv2.destroyAllWindows()
     # ACÁAAAAA, ARMAR LA SECUENCIA DEL JUGADOR
@@ -147,10 +144,10 @@ def main():
     final = time.time()
     print("tiempo antes del procesado",preprocesado_time-inicio)
     print("Tiempo total",final-inicio)
-
+    make_video(width,height, img_array,archivo )
 
 
 if __name__ == "__main__":
     main()
-    
+    #make_pdf(40, [10,15], "Prueba_experimental_B")
     
