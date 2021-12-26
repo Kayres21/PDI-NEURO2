@@ -28,7 +28,7 @@ def mouse_callback(event, x, y, flags, params):
         print(ROI_B, count)
 
 def main():
-    mode = 0 # 0 para prueba A, 1 para prueba B
+    mode = 1 # 0 para prueba A, 1 para prueba B
     if mode:
         archivo = "Prueba_experimental_B.mp4"
         roi = "ROI_B.txt"
@@ -48,7 +48,14 @@ def main():
     izquierdo = [0, 0] # posicion actual del pie izquierdo
     tol_x = 8 # toleracia para detectar pisada en eje x
     tol_y = 5 # toleracia para detectar pisada en eje y
-
+    seq = [] #arreglo que contiene la secuencia de balizas del jugador
+    #SECUENCIA_JUGADOR=[]
+    #FUNCION_MARCA_SECUENCIA(posicion_id){
+    # PASO PREVIO: GUARDE EL posicion_id DE LA POSICIÓN ANTERIOR
+    # 1: REVISE SI HAY UN posicion_id=4 (EL JUGADOR ESTÁ EN LA POSICIÓN BASE
+    # 2: GUARDAR EL posicion_id EN EL PASO PREVIO
+    # 3: EN CASO QUE EL posicion_id !=4 Y EL PASO PREVIO SEA 4: GUARDAR EL posicion_id EN EL PASO PREVIO
+    # 4: EN CASO QUE EL posicion_id = 4 Y EL PASO PREVIO SEA != 4: GUARDAR EL posicion_id EN SECUENCIA_JUGADOR)}
     '''
     ----- GENERAR LAS REGIONES DE INTERÉS (ACTUALMENTE Prueba_experimental_B.mp4) -----
     '''
@@ -79,7 +86,9 @@ def main():
             '''
             ----- MÓDULO DETECTOR DE PISADAS EN ZONAS DE INTERÉS -----
             '''
-            imagen = pisadas_roi(frame, pisada_x, pisada_y, baricentro_derecho, baricentro_izquierdo, points_and_contours)
+            imagen, index = pisadas_roi(frame, pisada_x, pisada_y, baricentro_derecho, baricentro_izquierdo, points_and_contours)
+            if index > -1:
+                seq.append(index)
             '''
             ----- MÓDULO DE PINTADO DE PISADAS -----
             '''
@@ -114,8 +123,30 @@ def main():
         make_video(width,height, img_array,archivo )
         cap.release()
         cv2.destroyAllWindows()
+    # ACÁAAAAA, ARMAR LA SECUENCIA DEL JUGADOR
+    #1: quitemos los 4
+    preprocesado_time=time.time()
+    lista_sin_cuatro = list(filter((4).__ne__, seq))
+    count = 1
+    temp = -1
+    res = []
+    for i in range(len(lista_sin_cuatro)):
+        if(temp == lista_sin_cuatro[i]):
+            count += 1
+            if(count >= 10):
+                if(len(res) == 0):
+                    res.append(lista_sin_cuatro[i])
+                else:
+                    if(res[-1] != lista_sin_cuatro[i]):
+                        res.append(lista_sin_cuatro[i])                    
+        else:
+            count = 1
+        temp = lista_sin_cuatro[i]
+    
+    print("Secuencia del jugador: ", res)
     final = time.time()
-    print(final-inicio)
+    print("tiempo antes del procesado",preprocesado_time-inicio)
+    print("Tiempo total",final-inicio)
 
 
 

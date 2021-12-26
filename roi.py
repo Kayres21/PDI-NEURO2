@@ -19,11 +19,14 @@ def pisadas_roi(imagen, pisada_x, pisada_y, baricentro_derecho, baricentro_izqui
     '''
         Si ocurrió una pisada, se busca dónde se pisó y se pinta.
     '''
+    index = -1
     if pisada_x or pisada_y:
         for i in range(len(points_and_contours)):
             der = cv2.pointPolygonTest(points_and_contours[i][1], (baricentro_derecho[0], baricentro_derecho[1]), False)
             izq = cv2.pointPolygonTest(points_and_contours[i][1], (baricentro_izquierdo[0], baricentro_izquierdo[1]), False)
             if (der >= 0) or (izq >= 0):
                     imagen = cv2.fillPoly(imagen, [points_and_contours[i][0]], (0, 255, 0))
-    return imagen
+                    index = i
+                    # print("baliza: ", i)
+    return imagen, index
     
