@@ -1,0 +1,6 @@
+name: graphics
+dependencies:
+  - python=3.9
+  - numpy
+  - opencv-python
+  - pip
