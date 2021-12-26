@@ -189,7 +189,7 @@ if __name__ == "__main__":
         exit()
 
 
-    GUI = False
+    GUI = True
 
     if (GUI):
         app = QApplication()
