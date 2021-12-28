@@ -181,12 +181,12 @@ if __name__ == "__main__":
 
     if Path("samples") not in subdirs:
         print("No existe directorio samples, abortando")
-        exit()
+        sys.exit()
 
 
     if Path("results") not in subdirs:
         print("No existe directorio results, abortando")
-        exit()
+        sys.exit()
 
 
     GUI = True
